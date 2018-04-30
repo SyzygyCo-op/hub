@@ -1,0 +1,12 @@
+flask
+python-dotenv
+requests
+flask-oauthlib
+six
+auth0-python
+SQLAlchemy
+Flask-SQLAlchemy
+Flask-Script
+Flask-Migrate
+psycopg2
+stripe

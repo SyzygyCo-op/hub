@@ -1,0 +1,23 @@
+body {
+  text-align: center;
+  font-size: 14px;
+}
+
+td {
+  padding: 0px 32px 7px 0px;
+}
+
+thead {
+  border-bottom: 1px black solid
+}
+
+.section {
+  width: 600px;
+  margin: auto;
+  text-align: left;
+}
+
+.header {
+  border: 1px solid black;
+  text-align: center;
+}
