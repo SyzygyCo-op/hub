@@ -34,14 +34,18 @@ def callback_handling():
         'name': userinfo['name'],
         'picture': userinfo['picture']
     }
+    id = id_from_userinfo(userinfo)
 
-    user = User.query.get(userinfo["email"])
+    user = User.query.get(id)
     if not user:
-      user = User(email = userinfo["email"], auth0_id = userinfo['sub'])
+      user = User(username = id, auth0_id = userinfo['sub'])
       db.session.add(user)
       db.session.commit()
 
     return redirect('/dashboard')
+
+def id_from_userinfo(userinfo):
+    return userinfo.get("email") or (userinfo.get("name") + " " + userinfo.get("sub"))
 
 @app.route('/verify', methods = ['POST'])
 def verify():
@@ -64,7 +68,7 @@ def logout():
 @app.route('/dashboard')
 @requires_auth
 def dashboard():
-    user = User.query.get(session[app.config["JWT_PAYLOAD"]]["email"])
+    user = User.query.get(id_from_userinfo(session[app.config["JWT_PAYLOAD"]]))
     if user.stripe_id:
         customer = stripe.Customer.retrieve(user.stripe_id)
         subscription = stripe.Subscription.list(limit=1, customer=customer.id).data[0]
@@ -80,13 +84,14 @@ def dashboard():
     else:
         return render_template('dashboard.html',
                                userinfo=session['profile']['user_id'],
+                               payload=session[app.config['JWT_PAYLOAD']],
                                user=user)
 
 @app.route("/discount", methods = ['POST'])
 @requires_auth
 def discount():
     discount = request.form.get("discount")
-    user = User.query.get(session[app.config["JWT_PAYLOAD"]]["email"])
+    user = User.query.get(id_from_userinfo(session[app.config["JWT_PAYLOAD"]]))
     customer = stripe.Customer.retrieve(user.stripe_id)
     subscription = stripe.Subscription.list(limit=1, customer=customer.id).data[0]
     subscription.coupon = discount
@@ -98,7 +103,7 @@ def discount():
 @requires_auth
 def clipper():
     clipper = request.form.get("clipper")
-    user = User.query.get(session[app.config["JWT_PAYLOAD"]]["email"])
+    user = User.query.get(id_from_userinfo(session[app.config["JWT_PAYLOAD"]]))
     user.clipper_id = clipper
     db.session.add(user)
     db.session.commit()
@@ -109,13 +114,13 @@ def clipper():
 @requires_auth
 def save():
     source = request.form.get("stripeSource")
-    user = User.query.get(session[app.config["JWT_PAYLOAD"]]["email"])
+    user = User.query.get(id_from_userinfo(session[app.config["JWT_PAYLOAD"]]))
     if user.stripe_id:
         customer = stripe.Customer.retrieve(user.stripe_id)
         customer.source = source
     else:
         customer = stripe.Customer.create(
-            email=user.email,
+            email=user.username,
             source=source,
         )
 
